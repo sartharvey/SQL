@@ -1,0 +1,205 @@
+CREATE TABLE celebs (
+   id INTEGER, 
+   name TEXT, 
+   age INTEGER
+);
+
+INSERT INTO celebs (id, name, age) 
+VALUES (1, 'Justin Bieber', 29);
+
+INSERT INTO celebs (id, name, age) 
+VALUES (2, 'Beyonce Knowles', 42); 
+
+INSERT INTO celebs (id, name, age) 
+VALUES (3, 'Jeremy Lin', 35); 
+
+INSERT INTO celebs (id, name, age) 
+VALUES (4, 'Taylor Swift', 33); 
+
+SELECT name FROM celebs;
+
+ALTER TABLE celebs 
+ADD COLUMN twitter_handle TEXT;
+
+SELECT * FROM celebs;
+
+UPDATE celebs
+SET twitter_handle = '@taylorswift13'
+WHERE id = 4;
+
+SELECT * FROM celebs;
+
+DELETE FROM celebs
+WHERE twitter_handle IS NULL;
+
+SELECT * FROM celebs;
+
+SELECT name AS 'Stage-name'
+FROM celebs;
+
+SELECT DISTINCT age
+FROM celebs;
+
+SELECT *
+FROM celebs
+WHERE age > 30;
+
+CREATE TABLE awards (
+  id INTEGER PRIMARY KEY, -- PRIMARY KEY = used to uniquely identify the row. Attempts to insert a row with an identical value to a row already in the table will result in a constraint violation which will not allow you to insert the new row
+  recipient TEXT NOT NULL, -- NOT NULL columns must have a value. Attempts to insert a row without a value for a NOT NULL column will result in a constraint violation and the new row will not be inserted.
+  award_name TEXT DEFAULT 'Grammy' -- DEFAULT columns take an additional argument that will be the assumed value for an inserted row if the new row does not specify a value for that column.
+);
+
+-- also UNIQUE columns have a different value for every row. This is similar to PRIMARY KEY except a table can have many different UNIQUE columns.
+
+SELECT *
+FROM movies
+WHERE name LIKE 'The %';
+
+SELECT *
+FROM movies
+WHERE name LIKE 'Se_en';
+
+SELECT name
+FROM movies
+WHERE imdb_rating IS NULL;
+
+SELECT *
+FROM movies
+WHERE name BETWEEN 'D' AND 'G';
+
+SELECT * -- finds movies released in the 1970s
+FROM movies
+WHERE year BETWEEN 1970 AND 1979;
+
+SELECT * -- finds horror movies released before 1985
+FROM movies
+WHERE year < 1985
+  AND genre = 'horror';
+    
+SELECT * -- finds all romance and comedy movies
+FROM movies
+WHERE genre = 'romance'
+  OR genre = 'comedy';
+    
+SELECT name, year, imdb_rating
+FROM movies
+ORDER BY imdb_rating DESC; -- DESC = HIGH TO LOW; ASC = LOW TO HIGH
+
+SELECT * -- finds top 3 rated movies
+FROM movies
+ORDER BY imdb_rating DESC
+LIMIT 3;
+
+SELECT name,
+  CASE
+    WHEN genre = 'romance'
+      OR genre = 'comedy' THEN 'Chill'
+    ELSE 'Intense'
+  END AS 'Mood'
+FROM movies;
+
+SELECT COUNT(*)
+FROM fake_apps
+WHERE price = 0;
+
+SELECT MAX(price)
+FROM fake_apps;
+
+SELECT SUM(downloads)
+FROM fake_apps;
+
+SELECT AVG(price)
+FROM fake_apps;
+
+SELECT ROUND(AVG(price), 2)
+FROM fake_apps;
+
+SELECT price, COUNT(*) -- count the total number of apps that have been downloaded more than 20,000 times, at each price.
+FROM fake_apps
+WHERE downloads > 20000
+GROUP BY price;
+
+SELECT category, SUM(downloads) -- calculates the total number of downloads for each category.
+FROM fake_apps
+GROUP BY category;
+
+SELECT category, -- 1 = first column selected (catergory), 2 = second column selected (price)
+   price,
+   AVG(downloads)
+FROM fake_apps
+GROUP BY 1, 2;
+
+-- HAVING statement always comes after GROUP BY, but before ORDER BY and LIMIT.
+
+SELECT price, -- It returns the average downloads (rounded) and the number of apps – at each price point.
+   ROUND(AVG(downloads)),
+   COUNT(*)
+FROM fake_apps
+GROUP BY price
+HAVING COUNT(*) > 10; -- adding a HAVING clause to restrict the query to price points that have more than 10 apps.
+
+SELECT * -- joins two tables together by the subscription id
+FROM orders
+JOIN subscriptions
+  ON orders.subscription_id = subscriptions.subscription_id;
+
+SELECT * -- only selects the above for fashion magazines
+FROM orders
+JOIN subscriptions
+  ON orders.subscription_id = subscriptions.subscription_id
+WHERE description = 'Fashion Magazine'; 
+
+SELECT *
+FROM newspaper
+LEFT JOIN online -- KEEPS data entries that do not have a corresponding id
+  ON newspaper.id = online.id;
+
+SELECT *
+FROM newspaper
+LEFT JOIN online
+  ON newspaper.id = online.id
+WHERE online.id IS NULL; -- This will select rows where there was no corresponding row from the online table.
+
+-- counts the number of subscribers subscribed for each month in the year
+SELECT COUNT(*)
+FROM newspaper
+WHERE start_month <= 3
+  AND end_month >= 3;
+
+SELECT *
+FROM newspaper
+CROSS JOIN months;
+
+SELECT *
+FROM newspaper
+CROSS JOIN months
+WHERE start_month <= month
+  AND end_month >= month;
+
+SELECT month,
+  COUNT(*)
+FROM newspaper
+CROSS JOIN months
+WHERE start_month <= month
+  AND end_month >= month
+GROUP BY month;
+
+
+SELECT * -- stacks two tables on top of one another Tables must have the same number of columns. The columns must have the same data types in the same order as the first table.
+FROM newspaper
+UNION 
+SELECT *
+FROM online;
+
+WITH previous_query AS (  -- how many magazines each customer subscribes to
+  SELECT customer_id,
+   COUNT(subscription_id) AS 'subscriptions'
+  FROM orders
+  GROUP BY customer_id 
+)
+SELECT customers.customer_name,
+       previous_query.subscriptions
+FROM previous_query
+JOIN customers
+  ON customers.customer_id = previous_query.customer_id;
